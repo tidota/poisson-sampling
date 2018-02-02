@@ -45,10 +45,7 @@ if exist('radius_skip','var') & radius_skip > 0
         num_new = size(PC_new,1);
         f_insert = true;
         for j = 1:num_new
-            if(  abs(PC_new(j,1)-PC(i,1)) < radius_skip
-              && abs(PC_new(j,2)-PC(i,2)) < radius_skip
-              && abs(PC_new(j,3)-PC(i,3)) < radius_skip
-              && norm(PC_new(j,:)-PC(i,:))<radius_skip)
+            if(norm(PC_new(j,:)-PC(i,:))<radius_skip)
                 f_insert = false;
             end
         end
