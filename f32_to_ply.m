@@ -47,7 +47,7 @@ else
     for i = 1:num
         fprintf(fp,'%f %f %f\n',PC(i,:));
         if(mod(i,100) == 0)
-            printf('%d points written\n',i);
+            printf('%d out of %d points written\n',i,num);
             fflush(stdout);
         end
     end
