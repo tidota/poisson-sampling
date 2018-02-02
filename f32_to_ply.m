@@ -18,7 +18,7 @@
 %
 function f32_to_ply(fname_f32, fname_ply, radius_skip, downsize)
 
-printf('loading f32...\n');
+printf('loading f32 (it may take a few minutes)...\n');
 fflush(stdout);
 PC = read_pts_binary_float32(fname_f32);
 
@@ -54,7 +54,7 @@ if exist('radius_skip','var') & radius_skip > 0
         end
 
         if (mod(i,100) == 0)
-            printf('%d out of %d resampled\n',i,num);
+            printf('%d out of %d processed, %d points resampled\n',i,num,num_new);
             fflush(stdout);
         end
     end
