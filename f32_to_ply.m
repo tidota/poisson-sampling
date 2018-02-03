@@ -63,6 +63,13 @@ if exist('radius_skip','var') & radius_skip > 0
   table = struct('list', cell(i_max,j_max,k_max));
   num_new = 0;
   
+  if ~exist('f_simple','var')
+    f_simple = false;
+  else
+    printf('simple mode enabled\n');
+    fflush(stdout)
+  end
+  
   tic;
 
   for indx_org = 1:num
@@ -72,7 +79,7 @@ if exist('radius_skip','var') & radius_skip > 0
     
     f_insert = true;
     
-    if exist('f_simple','var') && f_simple == true
+    if f_simple
       if size(table(i_m,j_m,k_m).list,1) > 0
         f_insert = false;
       end
