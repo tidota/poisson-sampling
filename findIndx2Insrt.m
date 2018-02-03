@@ -20,7 +20,6 @@ elseif(vec(last-1)<=val)
 else
   i_mid = first + floor((last - first)/2);
   while(first != i_mid)
-    i_mid
     if(val < vec(i_mid))
       last = i_mid;
     else
