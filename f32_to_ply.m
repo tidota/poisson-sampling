@@ -37,24 +37,43 @@ end
 num = size(PC,1);
 
 if exist('radius_skip','var') & radius_skip > 0
-    printf('eliminating redundant points...');
+    printf('eliminating redundant points...\n');
     fflush(stdout);
+    
+    tic;
 
     PC_new = PC(1,:);
     for i = 2:num
         num_new = size(PC_new,1);
+        
+        x_low = PC(i,1) - radius_skip;
+        x_ins = PC(i,1);
+        x_hgh = PC(i,1) + radius_skip;
+        
+        j_low = findIndx2Insrt(PC_new(:,1)',x_low,1,num_new+1);
+        j_ins = findIndx2Insrt(PC_new(:,1)',x_ins,1,num_new+1);
+        j_hgh = findIndx2Insrt(PC_new(:,1)',x_hgh,1,num_new+1) - 1;
+        
         f_insert = true;
-        for j = 1:num_new
+        for j = j_low:j_hgh
             if(norm(PC_new(j,:)-PC(i,:))<radius_skip)
                 f_insert = false;
             end
         end
         if(f_insert)
-            PC_new = [PC_new; PC(i,:)];
+            if(j_ins == 1)
+                PC_new = [PC(i,:); PC_new];
+            elseif(j_ins > size(PC_new,1))
+                PC_new = [PC_new; PC(i,:)];
+            else
+                PC_new = [PC_new(1:j_ins-1,:); PC(i,:); PC_new(j_ins:num_new,:)];
+            end
         end
 
-        if (mod(i,100) == 0)
-            printf('%d out of %d processed, %d points resampled\n',i,num,num_new);
+        if (mod(i,1000) == 0)
+            t = toc;
+            printf('%3d:%02d:%02d | ',floor(t/3600),mod(floor(t/60),60),mod(floor(t),60));
+            printf('%d out of %d processed (%2d %%), %d points resampled\n',i,num,floor(i*100/num),num_new);
             fflush(stdout);
         end
     end
