@@ -37,49 +37,90 @@ end
 num = size(PC,1);
 
 if exist('radius_skip','var') & radius_skip > 0
-    printf('eliminating redundant points...\n');
-    fflush(stdout);
+  % Points are temporarily stored in grid cells at an interval of radius_skip
+  % A new point is discarded if it is located near the existing ones
+  % This results in elimination of redundant points
+  
+  printf('eliminating redundant points...\n');
+  fflush(stdout);
+  
+  x_min = min(PC(:,1));
+  y_min = min(PC(:,2));
+  z_min = min(PC(:,3));
+  x_max = max(PC(:,1));
+  y_max = max(PC(:,2));
+  z_max = max(PC(:,3));
+  
+  i_m = 1 + floor((PC(1,1)-x_min)/radius_skip);
+  j_m = 1 + floor((PC(1,2)-y_min)/radius_skip);
+  k_m = 1 + floor((PC(1,3)-z_min)/radius_skip);
+  
+  i_max = 1 + floor((x_max-x_min)/radius_skip);
+  j_max = 1 + floor((y_max-y_min)/radius_skip);
+  k_max = 1 + floor((z_max-z_min)/radius_skip);  
+  table = struct('list', cell(i_max,j_max,k_max));
+  num_new = 0;
+  
+  tic;
+
+  for indx_org = 1:num
+    i_m = 1 + floor((PC(indx_org,1)-x_min)/radius_skip);
+    j_m = 1 + floor((PC(indx_org,2)-y_min)/radius_skip);
+    k_m = 1 + floor((PC(indx_org,3)-z_min)/radius_skip);
     
-    tic;
-
-    PC_new = PC(1,:);
-    for i = 2:num
-        num_new = size(PC_new,1);
-        
-        x_low = PC(i,1) - radius_skip;
-        x_ins = PC(i,1);
-        x_hgh = PC(i,1) + radius_skip;
-        
-        j_low = findIndx2Insrt(PC_new(:,1)',x_low,1,num_new+1);
-        j_ins = findIndx2Insrt(PC_new(:,1)',x_ins,1,num_new+1);
-        j_hgh = findIndx2Insrt(PC_new(:,1)',x_hgh,1,num_new+1) - 1;
-        
-        f_insert = true;
-        for j = j_low:j_hgh
-            if(norm(PC_new(j,:)-PC(i,:))<radius_skip)
+    f_insert = true;
+    
+    for i = i_m-1:i_m+1
+      for j = j_m-1:j_m+1
+        for k = k_m-1:k_m+1
+          if 1 <= i && i <= i_max...
+          && 1 <= j && j <= j_max...
+          && 1 <= k && k <= k_max
+            for indx_new = 1:size(table(i,j,k).list,1)
+              if(norm(table(i,j,k).list(indx_new,:)-PC(indx_org,:))<radius_skip)
                 f_insert = false;
+              end
             end
+          end
         end
-        if(f_insert)
-            if(j_ins == 1)
-                PC_new = [PC(i,:); PC_new];
-            elseif(j_ins > size(PC_new,1))
-                PC_new = [PC_new; PC(i,:)];
-            else
-                PC_new = [PC_new(1:j_ins-1,:); PC(i,:); PC_new(j_ins:num_new,:)];
-            end
-        end
-
-        if (mod(i,1000) == 0)
-            t = toc;
-            printf('%3d:%02d:%02d | ',floor(t/3600),mod(floor(t/60),60),mod(floor(t),60));
-            printf('%d out of %d processed (%2d %%), %d points resampled\n',i,num,floor(i*100/num),num_new);
-            fflush(stdout);
-        end
+      end
+    end
+    
+    if(f_insert)
+      table(i_m,j_m,k_m).list = [table(i_m,j_m,k_m).list; PC(indx_org,:)];
+      num_new = num_new + 1;
     end
 
-    PC = PC_new;
-    num = size(PC,1);
+    if (mod(indx_org,1000) == 0)
+        t = toc;
+        printf('%3d:%02d:%02d | ',floor(t/3600),mod(floor(t/60),60),mod(floor(t),60));
+        printf('%d out of %d processed (%2d %%), %d points resampled\n',indx_org,num,floor(indx_org*100/num),num_new);
+        fflush(stdout);
+    end
+  end
+
+  printf('copying the resampled points...\n');
+  fflush(stdout);
+  PC_new = [];
+  i_sec = 0;
+  num_sec = i_max*j_max*k_max;
+  tic;
+  for i = 1:i_max
+    for j = 1:j_max
+      for k = 1:k_max
+        PC_new = [PC_new; table(i,j,k).list];
+        i_sec = i_sec + 1;
+        if mod(i_sec,100000) == 0
+          t = toc;
+          printf('%3d:%02d:%02d | ',floor(t/3600),mod(floor(t/60),60),mod(floor(t),60));
+          printf('%d out of %d sections (%2d %%) processed\n',i_sec,num_sec,floor(i_sec*100/num_sec));
+          fflush(stdout);
+        end
+      end
+    end
+  end
+  PC = PC_new;
+  num = size(PC,1);
 end
 
 printf('# of points: %d\n',num);
@@ -87,25 +128,25 @@ printf('# of points: %d\n',num);
 fp = fopen(fname_ply,'w');
 
 if(fp == -1)
-    printf('file open error: %s\n',fname_ply);
+  printf('file open error: %s\n',fname_ply);
 else
-    printf('writing a file...\n');
-    fflush(stdout);
-    fprintf(fp,'ply\n');
-    fprintf(fp,'format ascii 1.0\n');
-    fprintf(fp,'element vertex %d\n',num);
-    fprintf(fp,'property float x\n');
-    fprintf(fp,'property float y\n');
-    fprintf(fp,'property float z\n');
-    fprintf(fp,'end_header\n');
-    for i = 1:num
-        fprintf(fp,'%f %f %f\n',PC(i,:));
-        
-        if(mod(i,100) == 0)
-            printf('%d out of %d points written\n',i,num);
-            fflush(stdout);
-        end
+  printf('writing a file...\n');
+  fflush(stdout);
+  fprintf(fp,'ply\n');
+  fprintf(fp,'format ascii 1.0\n');
+  fprintf(fp,'element vertex %d\n',num);
+  fprintf(fp,'property float x\n');
+  fprintf(fp,'property float y\n');
+  fprintf(fp,'property float z\n');
+  fprintf(fp,'end_header\n');
+  for i = 1:num
+    fprintf(fp,'%f %f %f\n',PC(i,:));
+    
+    if(mod(i,10000) == 0)
+      printf('%d out of %d points written\n',i,num);
+      fflush(stdout);
     end
-    fclose(fp);
+  end
+  fclose(fp);
 end
 
