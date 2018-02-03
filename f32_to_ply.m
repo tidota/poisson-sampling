@@ -113,29 +113,11 @@ if exist('radius_skip','var') & radius_skip > 0
         fflush(stdout);
     end
   end
-
-  printf('copying the resampled points...\n');
-  fflush(stdout);
-  PC_new = [];
-  i_sec = 0;
-  num_sec = i_max*j_max*k_max;
-  tic;
-  for i = 1:i_max
-    for j = 1:j_max
-      for k = 1:k_max
-        PC_new = [PC_new; table(i,j,k).list];
-        i_sec = i_sec + 1;
-        if mod(i_sec,100000) == 0
-          t = toc;
-          printf('%3d:%02d:%02d | ',floor(t/3600),mod(floor(t/60),60),mod(floor(t),60));
-          printf('%d out of %d sections (%2d %%) processed\n',i_sec,num_sec,floor(i_sec*100/num_sec));
-          fflush(stdout);
-        end
-      end
-    end
-  end
-  PC = PC_new;
-  num = size(PC,1);
+  
+  PC = [];
+  num = num_new;
+else
+  table = [];
 end
 
 printf('# of points: %d\n',num);
@@ -147,6 +129,7 @@ if(fp == -1)
 else
   printf('writing a file...\n');
   fflush(stdout);
+  tic;
   fprintf(fp,'ply\n');
   fprintf(fp,'format ascii 1.0\n');
   fprintf(fp,'element vertex %d\n',num);
@@ -154,12 +137,43 @@ else
   fprintf(fp,'property float y\n');
   fprintf(fp,'property float z\n');
   fprintf(fp,'end_header\n');
-  for i = 1:num
-    fprintf(fp,'%f %f %f\n',PC(i,:));
-    
-    if(mod(i,10000) == 0)
-      printf('%d out of %d points written\n',i,num);
-      fflush(stdout);
+  if size(table,1) > 0
+    num_p_written = 0;
+    i_max = size(table,1);
+    j_max = size(table,2);
+    k_max = size(table,3);
+    i_cell = 0;
+    num_cell = i_max*j_max*k_max;
+    printf('writing points from %d x %d x %d grid cells\n',i_max,j_max,k_max);
+    fflush(stdout);
+    for i = 1:i_max
+      for j = 1:j_max
+        for k = 1:k_max
+          for i_p_sec = 1:size(table(i,j,k).list,1)
+            fprintf(fp,'%f %f %f\n',table(i,j,k).list(i_p_sec,:));
+            num_p_written = num_p_written + 1;
+          end
+          i_cell = i_cell + 1;
+          if mod(i_cell,100000) == 0
+            t = toc;
+            printf('%3d:%02d:%02d | ',floor(t/3600),mod(floor(t/60),60),mod(floor(t),60));
+            printf('%d / %d cellss (%2d %%) processed | ',i_cell,num_cell,floor(i_cell*100/num_cell));
+            printf('%d / %d points (%2d %%) written\n',num_p_written,num,floor(num_p_written*100/num));
+            fflush(stdout);
+          end
+        end
+      end
+    end
+  else
+    for i = 1:num
+      fprintf(fp,'%f %f %f\n',PC(i,:));
+      
+      if(mod(i,10000) == 0)
+        t = toc;
+        printf('%3d:%02d:%02d | ',floor(t/3600),mod(floor(t/60),60),mod(floor(t),60));
+        printf('%d out of %d points written\n',i,num);
+        fflush(stdout);
+      end
     end
   end
   fclose(fp);
