@@ -15,14 +15,16 @@
 %     if given, eliminates points within this radius of another
 % - downsize(optional):
 %     if given, the size of data is downsized to this number
+% - f_simple(optional):
+%     if it is true, a point is stored only if the corresponding cell is empty
 %
-function f32_to_ply(fname_f32, fname_ply, radius_skip, downsize)
+function f32_to_ply(fname_f32, fname_ply, radius_skip, downsize, f_simple)
 
 printf('loading f32 (it may take a few minutes)...\n');
 fflush(stdout);
 PC = read_pts_binary_float32(fname_f32);
 
-if exist('downsize','var')
+if exist('downsize','var') && downsize != 0
     pkg load statistics % for octave
     % to use the downsample_point_cloud function on octave,
     % the statistics package is required.
@@ -70,15 +72,21 @@ if exist('radius_skip','var') & radius_skip > 0
     
     f_insert = true;
     
-    for i = i_m-1:i_m+1
-      for j = j_m-1:j_m+1
-        for k = k_m-1:k_m+1
-          if 1 <= i && i <= i_max...
-          && 1 <= j && j <= j_max...
-          && 1 <= k && k <= k_max
-            for indx_new = 1:size(table(i,j,k).list,1)
-              if(norm(table(i,j,k).list(indx_new,:)-PC(indx_org,:))<radius_skip)
-                f_insert = false;
+    if exist('f_simple','var') && f_simple == true
+      if size(table(i_m,j_m,k_m).list,1) > 0
+        f_insert = false;
+      end
+    else
+      for i = i_m-1:i_m+1
+        for j = j_m-1:j_m+1
+          for k = k_m-1:k_m+1
+            if 1 <= i && i <= i_max...
+            && 1 <= j && j <= j_max...
+            && 1 <= k && k <= k_max
+              for indx_new = 1:size(table(i,j,k).list,1)
+                if(norm(table(i,j,k).list(indx_new,:)-PC(indx_org,:))<radius_skip)
+                  f_insert = false;
+                end
               end
             end
           end
