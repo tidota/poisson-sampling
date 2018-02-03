@@ -62,6 +62,7 @@ if exist('radius_skip','var') & radius_skip > 0
   k_max = 1 + floor((z_max-z_min)/radius_skip);  
   table = struct('list', cell(i_max,j_max,k_max));
   num_new = 0;
+  PC_new = [];
   
   if ~exist('f_simple','var')
     f_simple = false;
@@ -103,6 +104,7 @@ if exist('radius_skip','var') & radius_skip > 0
     
     if(f_insert)
       table(i_m,j_m,k_m).list = [table(i_m,j_m,k_m).list; PC(indx_org,:)];
+      PC_new = [PC_new; PC(indx_org,:)];
       num_new = num_new + 1;
     end
 
@@ -114,7 +116,7 @@ if exist('radius_skip','var') & radius_skip > 0
     end
   end
   
-  PC = [];
+  PC = PC_new;
   num = num_new;
 else
   table = [];
@@ -137,43 +139,14 @@ else
   fprintf(fp,'property float y\n');
   fprintf(fp,'property float z\n');
   fprintf(fp,'end_header\n');
-  if size(table,1) > 0
-    num_p_written = 0;
-    i_max = size(table,1);
-    j_max = size(table,2);
-    k_max = size(table,3);
-    i_cell = 0;
-    num_cell = i_max*j_max*k_max;
-    printf('writing points from %d x %d x %d grid cells\n',i_max,j_max,k_max);
-    fflush(stdout);
-    for i = 1:i_max
-      for j = 1:j_max
-        for k = 1:k_max
-          for i_p_sec = 1:size(table(i,j,k).list,1)
-            fprintf(fp,'%f %f %f\n',table(i,j,k).list(i_p_sec,:));
-            num_p_written = num_p_written + 1;
-          end
-          i_cell = i_cell + 1;
-          if mod(i_cell,100000) == 0
-            t = toc;
-            printf('%3d:%02d:%02d | ',floor(t/3600),mod(floor(t/60),60),mod(floor(t),60));
-            printf('%d / %d cellss (%2d %%) processed | ',i_cell,num_cell,floor(i_cell*100/num_cell));
-            printf('%d / %d points (%2d %%) written\n',num_p_written,num,floor(num_p_written*100/num));
-            fflush(stdout);
-          end
-        end
-      end
-    end
-  else
-    for i = 1:num
-      fprintf(fp,'%f %f %f\n',PC(i,:));
-      
-      if(mod(i,10000) == 0)
-        t = toc;
-        printf('%3d:%02d:%02d | ',floor(t/3600),mod(floor(t/60),60),mod(floor(t),60));
-        printf('%d out of %d points written\n',i,num);
-        fflush(stdout);
-      end
+  for i = 1:num
+    fprintf(fp,'%f %f %f\n',PC(i,:));
+    
+    if(mod(i,10000) == 0)
+      t = toc;
+      printf('%3d:%02d:%02d | ',floor(t/3600),mod(floor(t/60),60),mod(floor(t),60));
+      printf('%d out of %d points written\n',i,num);
+      fflush(stdout);
     end
   end
   fclose(fp);
