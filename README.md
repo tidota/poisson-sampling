@@ -5,8 +5,8 @@ The resulted data is down-sampled, yet keeping the details in sparse areas.
 ![](./img/sampled_point_cloud.png)
 
 # Purpose
-For my simulation project, I made it to build a 3D mesh model from the raw data of a lava tube provided by CMU.
-http://www.frc.ri.cmu.edu/projects/NIAC_Caves/
+For my simulation project, I made it to build a 3D mesh model from [the raw data of a lava tube provided by CMU](
+http://www.frc.ri.cmu.edu/projects/NIAC_Caves/).
 
 # Usage
 I tested it only on Octave, but it should run on MatLab. For Octave, the packages 'io' and 'statistics' should be installed.
