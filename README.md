@@ -1,11 +1,11 @@
 # What is this?
 
 This includes my code to perform the Poisson sampling of point clouds, eliminating dense points which are close to each other in a specified radius.
-The resulted data is down-sampled, keeping the details in sparse areas.
+The resulted data is down-sampled, yet keeping the details in sparse areas.
 ![](./img/sampled_point_cloud.png)
 
 # Purpose
-This is primarily intended to be used for building a 3D mesh model from the raw data of a lava tube provided by CMU.
+For my simulation project, I made it to build a 3D mesh model from the raw data of a lava tube provided by CMU.
 http://www.frc.ri.cmu.edu/projects/NIAC_Caves/
 
 # Usage
