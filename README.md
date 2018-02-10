@@ -24,9 +24,33 @@ http://www.frc.ri.cmu.edu/projects/NIAC_Caves/#_Code
 The algorithm is (ridiculously) simple compared to the equivalent feature which can be found in the existing point cloud libraries. It repeatedly samples a point from the original data and searches the corresponding cell in a 3D table. If it does not finds neighbors or they are not located in the specified radius from the sample point, it registers the sampled point to both the list and table. Otherwise, the sampled point is discarded. Apparently, the more sophisticated ways employs octree instead of the table.
 
 # To build a meshed model
+
+## import a ply file
+First, you need to "import" the ply file which contains the 3D point clouds in it.
+
+## generate a basic mesh
 Here is a python script running on Blender.
 https://sourceforge.net/projects/pointcloudskin/
 
 The result looks like this.
 ![](./img/meshed1.png)
 ![](./img/meshed2.png)
+
+## refine the mesh
+The resulted mesh lacks some walls and contains holes or openings. The remesh modifier re-models the mesh so that the model does not have a hole. The quality and details depend on the degree of octree. The higher degree, the more detailed. For computational efficiency, however, the degree is set to 10 here.
+![](./img/remesh.png)
+
+If the model is rendered, it would look like this.
+![](./img/cave2.png)
+![](./img/cave3.png)
+This is the case that the model is remeshed with the highest degree of octree.
+![](./img/cave.png)
+
+## Normals of Faces
+Make sure that all surfaces faces inward.
+
+## export the data as a collada file
+Finally, export the data as a collada file (.dae).
+
+After setting up a world file. The Gazebo will show this environment.
+![](./img/gazebo.png)
